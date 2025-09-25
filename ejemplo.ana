@@ -1,0 +1,9 @@
+entidad Productor {
+    nombre: string
+    produccion: float
+    area: float
+    costos: float
+}
+
+reporte_consolidado productores nombre ReporteGlobal
+incluir Produccion, Area, Costos

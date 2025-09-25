@@ -1,0 +1,25 @@
+AnaliticaModel:
+    entidades*=Entidad
+    operaciones*=Operacion
+;
+
+Entidad:
+    'entidad' name=ID '{' campos*=Campo '}'
+;
+
+Campo:
+    name=ID ':' tipo=Tipo
+;
+
+Tipo:
+    'string' | 'int' | 'float'
+;
+
+Operacion:
+    ReporteProductores
+;
+
+ReporteProductores:
+    'reporte_consolidado' 'productores' 'nombre' name=ID
+    'incluir' campos+=ID[',']
+;
