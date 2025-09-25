@@ -2,8 +2,9 @@ from textx import metamodel_from_file
 from jinja2 import Template
 
 models_template = """
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -12,13 +13,25 @@ class {{entidad.name}}(Base):
     __tablename__ = "{{entidad.name.lower()}}s"
     id = Column(Integer, primary_key=True, index=True)
     {% for campo in entidad.campos -%}
+    {% if campo.name == 'id_productor' %}
+    id_productor = Column(Integer, ForeignKey("productors.id"))
+    productor = relationship("Productor", back_populates="productos")
+    {% elif campo.name == 'id_producto' %}
+    id_producto = Column(Integer, ForeignKey("productos.id"))
+    producto = relationship("Producto", back_populates="productores")
+    {% else %}
     {{campo.name}} = Column(
         {% if campo.tipo == 'string' %}String
         {% elif campo.tipo == 'int' %}Integer
         {% elif campo.tipo == 'float' %}Float
         {% endif %}, nullable=True)
+    {% endif %}
     {% endfor %}
 {% endfor %}
+
+# Relaciones inversas
+Productor.productos = relationship("ProductoProductor", back_populates="productor")
+Producto.productores = relationship("ProductoProductor", back_populates="producto")
 """
 
 database_template = """
@@ -62,11 +75,21 @@ def get_db():
 {% if op.__class__.__name__ == "ReporteProductores" %}
 @app.get("/reporte/{{op.name.lower()}}")
 def reporte_{{op.name.lower()}}(db: Session = Depends(get_db)):
-    productores = db.query(Productor).all()
-    data = [
-        { {% for campo in op.campos %}"{{campo}}": getattr(p, "{{campo.lower()}}"), {% endfor %} "Nombre": p.nombre }
-        for p in productores
-    ]
+    # JOIN explícito: trae (ProductoProductor, Productor, Producto)
+    relaciones = db.query(ProductoProductor, Productor, Producto) \
+                   .join(Productor, ProductoProductor.id_productor == Productor.id) \
+                   .join(Producto, ProductoProductor.id_producto == Producto.id) \
+                   .all()
+
+    data = []
+    for rel_pp, prodor, producto in relaciones:
+        data.append({
+            "Nombre Productor": prodor.nombre,
+            "Área": prodor.area,
+            "Nombre Producto": producto.nombre,
+            "Costo": rel_pp.costo,
+            "Cantidad": rel_pp.cantidad
+        })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
@@ -84,31 +107,37 @@ def reporte_{{op.name.lower()}}(db: Session = Depends(get_db)):
 @app.get("/reporte/{{op.name.lower()}}/pdf")
 def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del productor"),
                                 db: Session = Depends(get_db)):
-    productores = db.query(Productor).filter(Productor.nombre == nombre).all()
-    if not productores:
+    productor = db.query(Productor).filter(Productor.nombre == nombre).first()
+    if not productor:
         return {"error": f"No se encontró el productor con nombre {nombre}"}
 
-    # Extraer datos
-    producciones = [p.produccion for p in productores if p.produccion is not None]
-    costos = [p.costos for p in productores if p.costos is not None]
+    relaciones = db.query(ProductoProductor, Producto) \
+                   .join(Producto, ProductoProductor.id_producto == Producto.id) \
+                   .filter(ProductoProductor.id_productor == productor.id) \
+                   .all()
 
-    if not producciones or not costos:
+    if not relaciones:
         return {"error": f"No hay datos de producción/costos para {nombre}"}
 
-    # Gráfica Producción vs Costos
-    fig, ax = plt.subplots()
-    indices = range(len(producciones))
+    # Extraer datos
+    productos = [prod.nombre for _, prod in relaciones]
+    cantidades = [rel_pp.cantidad for rel_pp, _ in relaciones]
+    costos = [rel_pp.costo for rel_pp, _ in relaciones]
 
-    ax.bar([i - 0.2 for i in indices], producciones, width=0.4, color="blue", label="Producción")
-    ax.bar([i + 0.2 for i in indices], costos, width=0.4, color="orange", label="Costos")
-    ax.set_title(f"Producción vs Costos - {nombre}")
-    ax.set_xlabel("")
+    # Gráfica de barras: Cantidad vs Costo por producto
+    x = range(len(productos))
+    fig, ax = plt.subplots()
+    ax.bar([i - 0.2 for i in x], cantidades, width=0.4, color="orange", label="Cantidad")
+    ax.bar([i + 0.2 for i in x], costos, width=0.4, color="blue", label="Costo")
+
+    ax.set_title(f"Cantidad vs Costos por producto - {nombre}")
     ax.set_ylabel("Valor")
-    ax.set_xticks([])   # quitamos los números en el eje X
-    ax.legend() 
+    ax.set_xticks(x)
+    ax.set_xticklabels(productos, rotation=45, ha="right")
+    ax.legend()
 
     img_buf = io.BytesIO()
-    plt.savefig(img_buf, format="png")
+    plt.savefig(img_buf, format="png", bbox_inches="tight")
     plt.close(fig)
     img_buf.seek(0)
 
@@ -116,8 +145,8 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
     pdf_buf = io.BytesIO()
     c = canvas.Canvas(pdf_buf, pagesize=letter)
     c.setFont("Helvetica-Bold", 14)
-    c.drawString(100, 750, f"Reporte Producción vs Costos - {nombre}")
-    c.drawImage(ImageReader(img_buf), 50, 400, width=500, height=300)
+    c.drawString(100, 750, f"Reporte Cantidad vs Costos - {nombre}")
+    c.drawImage(ImageReader(img_buf), 50, 350, width=500, height=350)
     c.showPage()
     c.save()
     pdf_buf.seek(0)
