@@ -7,3 +7,6 @@ entidad Productor {
 
 reporte_consolidado productores nombre ReporteGlobal
 incluir Produccion, Area, Costos
+
+reporte_pdf productor nombre Historico
+campo produccion
