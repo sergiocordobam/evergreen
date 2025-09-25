@@ -1,5 +1,6 @@
 AnaliticaModel:
     entidades*=Entidad
+    relaciones*=Relacion
     operaciones*=Operacion
 ;
 
@@ -15,11 +16,30 @@ Tipo:
     'string' | 'int' | 'float'
 ;
 
-Operacion:
-    ReporteProductores
+Relacion:
+    'relacion' name=ID 'entre' entidad1=ID 'y' entidad2=ID 'muchos_a_muchos' '{' campos_relacion*=CampoRelacion '}'
 ;
 
-ReporteProductores:
-    'reporte_consolidado' 'productores' 'nombre' name=ID
-    'incluir' campos+=ID[',']
+CampoRelacion:
+    name=ID ':' tipo=Tipo
+;
+
+Operacion:
+    ReporteConsolidado | GraficaHistorico | TopProductores | ResumenCostos
+;
+
+ReporteConsolidado:
+    'reporte_consolidado' 'productores' 'costos' 'produccion'
+;
+
+GraficaHistorico:
+    'grafica' 'historico' 'produccion' 'productor' 'tiempo'
+;
+
+TopProductores:
+    'top_productores' 'producto' 'cantidad' 'minima'
+;
+
+ResumenCostos:
+    'resumen_costos' 'productor' 'agrupado' 'productos'
 ;

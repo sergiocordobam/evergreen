@@ -1,70 +1,4 @@
-from textx import metamodel_from_file
-from jinja2 import Template
 
-# -------------------------------
-# PLANTILLAS JINJA2
-# -------------------------------
-
-models_template = """
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from datetime import datetime
-
-Base = declarative_base()
-
-{% for entidad in entidades %}
-class {{entidad.name}}(Base):
-    __tablename__ = "{{entidad.name.lower()}}s"
-    id = Column(Integer, primary_key=True, index=True)
-    {% for campo in entidad.campos -%}
-    {{campo.name}} = Column(
-        {% if campo.tipo == 'string' %}String
-        {% elif campo.tipo == 'int' %}Integer
-        {% elif campo.tipo == 'float' %}Float
-        {% endif %}, nullable=True)
-    {% endfor %}
-    
-    # Relaciones muchos a muchos
-    {% for relacion in relaciones %}
-    {% if relacion.entidad1 == entidad.name or relacion.entidad2 == entidad.name %}
-    {{relacion.name.lower()}} = relationship("{{relacion.name}}", back_populates="{{entidad.name.lower()}}")
-    {% endif %}
-    {% endfor %}
-{% endfor %}
-
-{% for relacion in relaciones %}
-class {{relacion.name}}(Base):
-    __tablename__ = "{{relacion.name.lower()}}"
-    id = Column(Integer, primary_key=True, index=True)
-    id_productor = Column(Integer, ForeignKey("{{relacion.entidad1.lower()}}s.id"), nullable=False)
-    id_producto = Column(Integer, ForeignKey("{{relacion.entidad2.lower()}}s.id"), nullable=False)
-    {% for campo in relacion.campos_relacion -%}
-    {{campo.name}} = Column(
-        {% if campo.tipo == 'string' %}String
-        {% elif campo.tipo == 'int' %}Integer
-        {% elif campo.tipo == 'float' %}Float
-        {% endif %}, nullable=True)
-    {% endfor %}
-    fecha_registro = Column(DateTime, default=datetime.utcnow)
-    
-    # Relaciones
-    {{relacion.entidad1.lower()}} = relationship("{{relacion.entidad1}}", back_populates="{{relacion.name.lower()}}")
-    {{relacion.entidad2.lower()}} = relationship("{{relacion.entidad2}}", back_populates="{{relacion.name.lower()}}")
-{% endfor %}
-"""
-
-database_template = """
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-DATABASE_URL = "sqlite:///./evergreen.db"
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-"""
-
-main_template = """
 from fastapi import FastAPI, Depends, Query
 from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.orm import Session
@@ -77,7 +11,7 @@ from datetime import datetime, timedelta
 import base64
 
 from database import SessionLocal, engine
-from models import Base, {{ entidades|map(attribute='name')|join(', ') }}, {{ relaciones|map(attribute='name')|join(', ') }}
+from models import Base, Productor, Producto, ProductoProductores
 
 Base.metadata.create_all(bind=engine)
 
@@ -101,9 +35,7 @@ def reporte_consolidado(db: Session = Depends(get_db)):
         func.sum(ProductoProductores.costos).label('Total_Costos'),
         func.sum(ProductoProductores.cantidad).label('Total_Produccion'),
         func.count(ProductoProductores.id).label('Num_Productos')
-    ).join(ProductoProductores, Productor.id == ProductoProductores.id_productor)\
-     .group_by(Productor.id, Productor.nombre, Productor.area)\
-     .all()
+    ).join(ProductoProductores, Productor.id == ProductoProductores.id_productor)     .group_by(Productor.id, Productor.nombre, Productor.area)     .all()
     
     data = [
         {
@@ -140,10 +72,7 @@ def grafica_historico_produccion(productor_id: int, db: Session = Depends(get_db
         Producto.nombre.label('producto'),
         ProductoProductores.cantidad,
         ProductoProductores.costos
-    ).join(Producto, ProductoProductores.id_producto == Producto.id)\
-     .filter(ProductoProductores.id_productor == productor_id)\
-     .order_by(ProductoProductores.fecha_registro)\
-     .all()
+    ).join(Producto, ProductoProductores.id_producto == Producto.id)     .filter(ProductoProductores.id_productor == productor_id)     .order_by(ProductoProductores.fecha_registro)     .all()
     
     if not query:
         return JSONResponse({"error": "No se encontraron datos para el productor especificado"})
@@ -205,13 +134,7 @@ def top_productores(producto_id: int, cantidad_minima: float = Query(100), db: S
         Producto.nombre.label('Producto'),
         func.sum(ProductoProductores.cantidad).label('Total_Cantidad'),
         func.sum(ProductoProductores.costos).label('Total_Costos')
-    ).join(ProductoProductores, Productor.id == ProductoProductores.id_productor)\
-     .join(Producto, ProductoProductores.id_producto == Producto.id)\
-     .filter(Producto.id == producto_id)\
-     .group_by(Productor.id, Productor.nombre, Productor.area, Producto.nombre)\
-     .having(func.sum(ProductoProductores.cantidad) >= cantidad_minima)\
-     .order_by(desc(func.sum(ProductoProductores.cantidad)))\
-     .all()
+    ).join(ProductoProductores, Productor.id == ProductoProductores.id_productor)     .join(Producto, ProductoProductores.id_producto == Producto.id)     .filter(Producto.id == producto_id)     .group_by(Productor.id, Productor.nombre, Productor.area, Producto.nombre)     .having(func.sum(ProductoProductores.cantidad) >= cantidad_minima)     .order_by(desc(func.sum(ProductoProductores.cantidad)))     .all()
     
     data = [
         {
@@ -243,11 +166,7 @@ def resumen_costos_productor(productor_id: int, db: Session = Depends(get_db)):
         func.sum(ProductoProductores.cantidad).label('Total_Cantidad'),
         func.count(ProductoProductores.id).label('Num_Registros'),
         func.avg(ProductoProductores.costos).label('Costo_Promedio')
-    ).join(ProductoProductores, Producto.id == ProductoProductores.id_producto)\
-     .filter(ProductoProductores.id_productor == productor_id)\
-     .group_by(Producto.id, Producto.nombre)\
-     .order_by(desc(func.sum(ProductoProductores.costos)))\
-     .all()
+    ).join(ProductoProductores, Producto.id == ProductoProductores.id_producto)     .filter(ProductoProductores.id_productor == productor_id)     .group_by(Producto.id, Producto.nombre)     .order_by(desc(func.sum(ProductoProductores.costos)))     .all()
     
     data = [
         {
@@ -280,30 +199,3 @@ def get_productores(db: Session = Depends(get_db)):
 def get_productos(db: Session = Depends(get_db)):
     productos = db.query(Producto).all()
     return [{"id": p.id, "nombre": p.nombre} for p in productos]
-"""
-
-# -------------------------------
-# CARGAR GRAMÁTICA Y MODELO
-# -------------------------------
-
-mm = metamodel_from_file("analitica.tx")
-model = mm.model_from_file("ejemplo.ana")
-
-# -------------------------------
-# GENERAR ARCHIVOS
-# -------------------------------
-
-# models.py
-with open("models.py", "w") as f:
-    f.write(Template(models_template).render(entidades=model.entidades, relaciones=model.relaciones))
-print("✅ Generado: models.py")
-
-# database.py
-with open("database.py", "w") as f:
-    f.write(database_template)
-print("✅ Generado: database.py")
-
-# main.py
-with open("main.py", "w") as f:
-    f.write(Template(main_template).render(entidades=model.entidades, relaciones=model.relaciones, operaciones=model.operaciones))
-print("✅ Generado: main.py")
