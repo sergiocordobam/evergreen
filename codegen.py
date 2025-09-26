@@ -29,7 +29,6 @@ class {{entidad.name}}(Base):
     {% endfor %}
 {% endfor %}
 
-# Relaciones inversas
 Productor.productos = relationship("ProductoProductor", back_populates="productor")
 Producto.productores = relationship("ProductoProductor", back_populates="producto")
 """
@@ -76,7 +75,7 @@ def get_db():
 {% if op.__class__.__name__ == "ReporteProductores" %}
 @app.get("/reporte/{{op.name.lower()}}")
 def reporte_{{op.name.lower()}}(db: Session = Depends(get_db)):
-    # JOIN explícito: trae (ProductoProductor, Productor, Producto)
+
     relaciones = db.query(ProductoProductor, Productor, Producto) \
                    .join(Productor, ProductoProductor.id_productor == Productor.id) \
                    .join(Producto, ProductoProductor.id_producto == Producto.id) \
@@ -120,12 +119,10 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
     if not relaciones:
         return {"error": f"No hay datos de producción/costos para {nombre}"}
 
-    # Extraer datos
     productos = [prod.nombre for _, prod in relaciones]
     cantidades = [rel_pp.cantidad for rel_pp, _ in relaciones]
     costos = [rel_pp.costo for rel_pp, _ in relaciones]
 
-    # Gráfica de barras: Cantidad vs Costo por producto
     x = range(len(productos))
     fig, ax = plt.subplots()
     ax.bar([i - 0.2 for i in x], cantidades, width=0.4, color="orange", label="Cantidad")
@@ -142,7 +139,6 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
     plt.close(fig)
     img_buf.seek(0)
 
-    # PDF
     pdf_buf = io.BytesIO()
     c = canvas.Canvas(pdf_buf, pagesize=letter)
     c.setFont("Helvetica-Bold", 14)
@@ -163,12 +159,10 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
 def reporte_{{op.name.lower()}}(producto: str = Query(..., description="Nombre del producto"),
                                 db: Session = Depends(get_db)):
 
-    # Buscar el producto
     prod = db.query(Producto).filter(Producto.nombre == producto).first()
     if not prod:
         return {"error": f"No se encontró el producto {producto}"}
 
-    # Traer relaciones de este producto
     relaciones = db.query(ProductoProductor, Productor) \
                    .join(Productor, ProductoProductor.id_productor == Productor.id) \
                    .filter(ProductoProductor.id_producto == prod.id) \
@@ -210,7 +204,6 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
     if not productor:
         return {"error": f"No se encontró el productor con nombre {nombre}"}
 
-    # Agregar costos agrupados por producto
     relaciones = db.query(Producto.nombre, func.sum(ProductoProductor.costo).label("total_costo")) \
                    .join(Producto, Producto.id == ProductoProductor.id_producto) \
                    .filter(ProductoProductor.id_productor == productor.id) \
@@ -229,7 +222,6 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
             "Total Costo": total_costo
         })
 
-    # Exportar a Excel
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
@@ -248,17 +240,14 @@ def reporte_{{op.name.lower()}}(nombre: str = Query(..., description="Nombre del
 mm = metamodel_from_file("analitica.tx")
 model = mm.model_from_file("ejemplo.ana")
 
-# models.py
 with open("models.py", "w", encoding="utf-8") as f:
     f.write(Template(models_template).render(entidades=model.entidades))
 print("Generado: models.py")
 
-# database.py
 with open("database.py", "w", encoding="utf-8") as f:
     f.write(database_template)
 print("Generado: database.py")
 
-# main.py
 with open("main.py", "w", encoding="utf-8") as f:
     f.write(Template(main_template).render(entidades=model.entidades, operaciones=model.operaciones))
 print("Generado: main.py")

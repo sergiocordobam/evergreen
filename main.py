@@ -30,7 +30,7 @@ def get_db():
 
 @app.get("/reporte/reporteglobal")
 def reporte_reporteglobal(db: Session = Depends(get_db)):
-    # JOIN explícito: trae (ProductoProductor, Productor, Producto)
+
     relaciones = db.query(ProductoProductor, Productor, Producto)                    .join(Productor, ProductoProductor.id_productor == Productor.id)                    .join(Producto, ProductoProductor.id_producto == Producto.id)                    .all()
 
     data = []
@@ -70,12 +70,10 @@ def reporte_historico(nombre: str = Query(..., description="Nombre del productor
     if not relaciones:
         return {"error": f"No hay datos de producción/costos para {nombre}"}
 
-    # Extraer datos
     productos = [prod.nombre for _, prod in relaciones]
     cantidades = [rel_pp.cantidad for rel_pp, _ in relaciones]
     costos = [rel_pp.costo for rel_pp, _ in relaciones]
 
-    # Gráfica de barras: Cantidad vs Costo por producto
     x = range(len(productos))
     fig, ax = plt.subplots()
     ax.bar([i - 0.2 for i in x], cantidades, width=0.4, color="orange", label="Cantidad")
@@ -92,7 +90,6 @@ def reporte_historico(nombre: str = Query(..., description="Nombre del productor
     plt.close(fig)
     img_buf.seek(0)
 
-    # PDF
     pdf_buf = io.BytesIO()
     c = canvas.Canvas(pdf_buf, pagesize=letter)
     c.setFont("Helvetica-Bold", 14)
@@ -115,12 +112,10 @@ def reporte_historico(nombre: str = Query(..., description="Nombre del productor
 def reporte_top3(producto: str = Query(..., description="Nombre del producto"),
                                 db: Session = Depends(get_db)):
 
-    # Buscar el producto
     prod = db.query(Producto).filter(Producto.nombre == producto).first()
     if not prod:
         return {"error": f"No se encontró el producto {producto}"}
 
-    # Traer relaciones de este producto
     relaciones = db.query(ProductoProductor, Productor)                    .join(Productor, ProductoProductor.id_productor == Productor.id)                    .filter(ProductoProductor.id_producto == prod.id)                    .order_by(ProductoProductor.cantidad.desc())                    .limit(3)                    .all()
 
     if not relaciones:
@@ -159,7 +154,6 @@ def reporte_costosagrupados(nombre: str = Query(..., description="Nombre del pro
     if not productor:
         return {"error": f"No se encontró el productor con nombre {nombre}"}
 
-    # Agregar costos agrupados por producto
     relaciones = db.query(Producto.nombre, func.sum(ProductoProductor.costo).label("total_costo"))                    .join(Producto, Producto.id == ProductoProductor.id_producto)                    .filter(ProductoProductor.id_productor == productor.id)                    .group_by(Producto.nombre)                    .all()
 
     if not relaciones:
@@ -174,7 +168,6 @@ def reporte_costosagrupados(nombre: str = Query(..., description="Nombre del pro
             "Total Costo": total_costo
         })
 
-    # Exportar a Excel
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
