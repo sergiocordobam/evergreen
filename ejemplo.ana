@@ -1,9 +1,25 @@
 entidad Productor {
     nombre: string
-    produccion: float
     area: float
-    costos: float
+}
+
+entidad Producto {
+    nombre: string
+}
+
+entidad ProductoProductor {
+    id_producto: int
+    id_productor: int
+    costo: float
+    cantidad: float
 }
 
 reporte_consolidado productores nombre ReporteGlobal
-incluir Produccion, Area, Costos
+incluir area
+
+reporte_pdf productor nombre Historico
+campo produccion
+
+reporte_top3 productor producto nombre Top3
+
+reporte_costos productor producto nombre CostosAgrupados

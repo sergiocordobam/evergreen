@@ -16,10 +16,23 @@ Tipo:
 ;
 
 Operacion:
-    ReporteProductores
+    ReporteProductores | ReporteProductorPDF | ReporteTop3 | ReporteCostos
 ;
 
 ReporteProductores:
     'reporte_consolidado' 'productores' 'nombre' name=ID
     'incluir' campos+=ID[',']
+;
+
+ReporteProductorPDF:
+    'reporte_pdf' 'productor' 'nombre' name=ID
+    'campo' campo=ID
+;
+
+ReporteTop3:
+    'reporte_top3' 'productor' 'producto' 'nombre' name=ID
+;
+
+ReporteCostos:
+    'reporte_costos' 'productor' 'producto' 'nombre' name=ID
 ;
