@@ -55,6 +55,5 @@ class ProductoProductor(Base):
     
 
 
-# Relaciones inversas
 Productor.productos = relationship("ProductoProductor", back_populates="productor")
 Producto.productores = relationship("ProductoProductor", back_populates="producto")
