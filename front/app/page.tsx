@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileSpreadsheet, FileText, BarChart3, TrendingUp, Users, DollarSign, Leaf, Download } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import toast from "react-hot-toast"
+import * as XLSX from 'xlsx'
 
 interface PreviewData {
   type: "excel" | "pdf"
@@ -137,31 +138,51 @@ export default function ReportesPage() {
     const [excelData, setExcelData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
-    useState(() => {
+    useEffect(() => {
       const loadExcel = async () => {
         try {
-          // Simulamos la carga de datos Excel (en producción usarías SheetJS)
-          setTimeout(() => {
+          // Procesar el ArrayBuffer del Excel usando XLSX
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+          const firstSheetName = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[firstSheetName]
+          
+          // Convertir la hoja a array de arrays
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+          
+          // Si no hay datos, mostrar estructura vacía
+          if (jsonData.length === 0) {
             setExcelData({
-              sheets: ["Datos"],
+              sheets: [firstSheetName],
               data: [
-                ["Productor", "Producto", "Cantidad", "Costo"],
-                ["Finca 1", "Café", "1000 kg", "$2,500"],
-                ["Finca 2", "Cacao", "800 kg", "$3,200"],
-                ["Finca 3", "Café", "1200 kg", "$3,000"],
-                ["Finca 4", "Maíz", "2000 kg", "$1,800"],
+                ["Nombre Productor", "Área", "Producto", "Cantidad", "Costo"],
+                ["Sin datos disponibles", "", "", "", ""]
               ],
             })
-            setLoading(false)
-          }, 1000)
+          } else {
+            setExcelData({
+              sheets: [firstSheetName],
+              data: jsonData,
+            })
+          }
+          
+          setLoading(false)
         } catch (error) {
           console.error("Error loading Excel:", error)
           setLoading(false)
           toast.error("Error al procesar el archivo Excel")
+          
+          // Fallback con estructura esperada
+          setExcelData({
+            sheets: ["Datos"],
+            data: [
+              ["Nombre Productor", "Área", "Producto", "Cantidad", "Costo"],
+              ["Error al cargar datos", "", "", "", ""]
+            ],
+          })
         }
       }
       loadExcel()
-    })
+    }, [arrayBuffer])
 
     if (loading) {
       return (
@@ -184,7 +205,7 @@ export default function ReportesPage() {
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
-                    {excelData.data[0].map((header: string, index: number) => (
+                    {excelData.data[0]?.map((header: string, index: number) => (
                       <th key={index} className="px-3 py-2 text-left font-medium text-xs">
                         {header}
                       </th>
@@ -192,11 +213,11 @@ export default function ReportesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {excelData.data.slice(1).map((row: string[], rowIndex: number) => (
+                  {excelData.data.slice(1).map((row: any[], rowIndex: number) => (
                     <tr key={rowIndex} className="border-t">
-                      {row.map((cell: string, cellIndex: number) => (
+                      {row.map((cell: any, cellIndex: number) => (
                         <td key={cellIndex} className="px-3 py-2 text-xs">
-                          {cell}
+                          {cell?.toString() || ''}
                         </td>
                       ))}
                     </tr>
@@ -234,7 +255,7 @@ export default function ReportesPage() {
       title: "Reporte Global Consolidado",
       description: "Información consolidada de todos los productores y sus costos de producción",
       icon: <BarChart3 className="h-6 w-6" />,
-      endpoint: "/api/reporte/reporteglobal",
+      endpoint: "http://localhost:8000/reporte/reporteglobal",
       filename: "reporte_global.xlsx",
       type: "excel" as const,
       userType: "Administrador",
@@ -246,7 +267,7 @@ export default function ReportesPage() {
       title: "Histórico de Producción",
       description: "Gráfica del histórico de producción por finca para análisis temporal",
       icon: <TrendingUp className="h-6 w-6" />,
-      endpoint: `/api/reporte/historico/pdf?nombre=${encodeURIComponent(fincaName)}`,
+      endpoint: `http://localhost:8000/reporte/historico/pdf?nombre=${encodeURIComponent(fincaName)}`,
       filename: `historico_${fincaName.replace(/\s+/g, "_")}.pdf`,
       type: "pdf" as const,
       userType: "Productor",
@@ -259,7 +280,7 @@ export default function ReportesPage() {
       title: "Top 3 Productores",
       description: "Los 3 productores que más generan de un producto específico",
       icon: <Users className="h-6 w-6" />,
-      endpoint: `/api/reporte/top3/top3?producto=${encodeURIComponent(producto)}`,
+      endpoint: `http://localhost:8000/reporte/top3/top3?producto=${encodeURIComponent(producto)}`,
       filename: `top3_${producto.replace(/\s+/g, "_")}.xlsx`,
       type: "excel" as const,
       userType: "Administrador",
@@ -272,7 +293,7 @@ export default function ReportesPage() {
       title: "Costos Agrupados",
       description: "Total de costos agrupados por productos para análisis financiero",
       icon: <DollarSign className="h-6 w-6" />,
-      endpoint: `/api/reporte/costosagrupados/costos?nombre=${encodeURIComponent(fincaName)}`,
+      endpoint: `http://localhost:8000/reporte/costosagrupados/costos?nombre=${encodeURIComponent(fincaName)}`,
       filename: `costos_agrupados_${fincaName.replace(/\s+/g, "_")}.xlsx`,
       type: "excel" as const,
       userType: "Productor",
