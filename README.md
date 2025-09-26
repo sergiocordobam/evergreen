@@ -26,14 +26,15 @@ luego se transforman en código ejecutable o aplicaciones.
    ```
 
 ### Frontend (Next.js)
+   Primero busca la ruta del Front de esta manera:
+   ```bash
+   cd .\front\
+   ```
 1. Instala las dependencias de Node:
    ```bash
    npm install
    ```
-2. Inicia el servidor frontend:
-   ```bash
-   cd .\front\
-    ```
+3. Inicia el servidor frontend:
    ```bash
    npm run dev
    ```
