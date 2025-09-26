@@ -1,5 +1,6 @@
 
 from fastapi import FastAPI, Depends, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -18,6 +19,20 @@ from models import Base, Productor, Producto, ProductoProductor
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# Configuración de CORS para permitir peticiones desde el frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Puedes especificar tu dominio en vez de "*"
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Endpoint de salud para comprobar si el backend está online
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
 
 def get_db():
     db = SessionLocal()
