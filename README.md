@@ -2,6 +2,10 @@
 
 Sistema de análisis para la gestión agrícola inteligente
 
+## Módulo Analítica (ANA) - Implementado con TextX
+TextX es un framework de metamodelado desarrollado en Python que permite
+definir lenguajes específicos de dominio (DSLs) y utilizarlos para crear modelos que
+luego se transforman en código ejecutable o aplicaciones.
 ## Requisitos
 
 - Python 3.10+
