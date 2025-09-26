@@ -6,6 +6,12 @@
       "use": "@vercel/next"
     }
   ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://evergreen-backend.up.railway.app/api/:path*"
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",

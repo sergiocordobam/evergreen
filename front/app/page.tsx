@@ -286,21 +286,21 @@ export default function ReportesPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-primary/10">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/10 mb-2 sm:mb-0">
               <Leaf className="h-8 w-8 text-primary" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">EverGreen Analytics</h1>
-              <p className="text-muted-foreground text-lg">Sistema de análisis para la gestión agrícola inteligente</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className="text-sm">
+            <div className="w-full">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground break-words">EverGreen Analytics</h1>
+              <p className="text-muted-foreground text-base md:text-lg leading-snug break-words">Sistema de análisis para la gestión agrícola inteligente</p>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-2 w-full">
+                <Badge variant="secondary" className="text-xs md:text-sm w-full sm:w-auto">
                   Módulo Analítica (ANA) - Implementado con TextX
                 </Badge>
                 <Badge
                   variant={backendStatus === "online" ? "default" : backendStatus === "offline" ? "destructive" : "secondary"}
-                  className="text-sm"
+                  className="text-xs md:text-sm w-full sm:w-auto"
                 >
                   Backend: {backendStatus === "online" ? "Online" : backendStatus === "offline" ? "Offline" : "Desconocido"}
                 </Badge>
@@ -310,12 +310,12 @@ export default function ReportesPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-2 sm:px-6 py-4 sm:py-8">
         {/* Hero Section */}
-        <section className="mb-12 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-4xl font-bold text-balance mb-4">Reportes Inteligentes para el Futuro Agrícola</h2>
-            <p className="text-xl text-muted-foreground text-pretty leading-relaxed">
+        <section className="mb-8 sm:mb-12 text-center">
+          <div className="max-w-3xl mx-auto px-2">
+            <h2 className="text-2xl sm:text-4xl font-bold text-balance mb-2 sm:mb-4">Reportes Inteligentes para el Futuro Agrícola</h2>
+            <p className="text-base sm:text-xl text-muted-foreground text-pretty leading-relaxed">
               Accede a información consolidada sobre producción, costos y rendimiento. Toma decisiones informadas con
               datos precisos y actualizados.
             </p>
@@ -323,21 +323,21 @@ export default function ReportesPage() {
         </section>
 
         {/* Input Section */}
-        <section className="mb-8">
+        <section className="mb-6 sm:mb-8">
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Parámetros de Consulta
+                <span className="text-base sm:text-lg">Parámetros de Consulta</span>
               </CardTitle>
-              <CardDescription>Completa los campos necesarios para generar los reportes específicos</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Completa los campos necesarios para generar los reportes específicos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="finca">Nombre de la Finca</Label>
+                  <Label htmlFor="finca" className="text-xs sm:text-sm">Nombre de la Finca</Label>
                   <Select value={fincaName} onValueChange={setFincaName}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger className="bg-background text-xs sm:text-sm">
                       <SelectValue placeholder="Selecciona una finca" />
                     </SelectTrigger>
                     <SelectContent>
@@ -348,12 +348,12 @@ export default function ReportesPage() {
                       <SelectItem value="Finca 5">Finca 5</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-muted-foreground">Requerido para reportes de histórico y costos</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Requerido para reportes de histórico y costos</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="producto">Producto</Label>
+                  <Label htmlFor="producto" className="text-xs sm:text-sm">Producto</Label>
                   <Select value={producto} onValueChange={setProducto}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger className="bg-background text-xs sm:text-sm">
                       <SelectValue placeholder="Selecciona un producto" />
                     </SelectTrigger>
                     <SelectContent>
@@ -364,7 +364,7 @@ export default function ReportesPage() {
                       <SelectItem value="Plátano">Plátano</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-muted-foreground">Requerido para reporte Top 3</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Requerido para reporte Top 3</p>
                 </div>
               </div>
             </CardContent>
@@ -373,12 +373,12 @@ export default function ReportesPage() {
 
         {/* Reports Grid */}
         <section>
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold mb-2">Reportes Disponibles</h3>
-            <p className="text-muted-foreground">Selecciona el tipo de reporte que necesitas generar</p>
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">Reportes Disponibles</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Selecciona el tipo de reporte que necesitas generar</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {reportes.map((reporte) => {
               const canGenerate =
                 !reporte.requiresInput ||
@@ -390,17 +390,17 @@ export default function ReportesPage() {
               return (
                 <Card key={reporte.id} className={`transition-all duration-200 hover:shadow-lg ${reporte.color}`}>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-background/50">{reporte.icon}</div>
                         <div>
-                          <CardTitle className="text-lg">{reporte.title}</CardTitle>
-                          <Badge variant="secondary" className="mt-1">
+                          <CardTitle className="text-base sm:text-lg">{reporte.title}</CardTitle>
+                          <Badge variant="secondary" className="mt-1 text-xs sm:text-sm">
                             {reporte.userType}
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
                         {reporte.type === "excel" ? (
                           <FileSpreadsheet className="h-4 w-4" />
                         ) : (
@@ -411,11 +411,11 @@ export default function ReportesPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground mb-4 leading-relaxed">{reporte.description}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4 leading-relaxed">{reporte.description}</p>
 
                     {reporte.requiresInput && (
-                      <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm text-muted-foreground">
+                      <div className="mb-2 sm:mb-4 p-2 sm:p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           <strong>Requiere:</strong>{" "}
                           {reporte.inputType === "finca" ? "Nombre de la finca" : "Selección de producto"}
                         </p>
@@ -423,8 +423,8 @@ export default function ReportesPage() {
                     )}
 
                     {hasPreview && (
-                      <div className="mb-4 p-4 bg-background/50 rounded-lg border">
-                        <h4 className="text-sm font-medium mb-3 text-foreground">Vista Previa:</h4>
+                      <div className="mb-2 sm:mb-4 p-2 sm:p-4 bg-background/50 rounded-lg border">
+                        <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3 text-foreground">Vista Previa:</h4>
                         {hasPreview.type === "excel" ? (
                           <ExcelPreview arrayBuffer={hasPreview.content} filename={hasPreview.filename} />
                         ) : (
@@ -474,25 +474,25 @@ export default function ReportesPage() {
         </section>
 
         {/* Footer Info */}
-        <section className="mt-12 text-center">
+        <section className="mt-8 sm:mt-12 text-center">
           <Card className="max-w-4xl mx-auto bg-muted/30">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-primary">4</div>
-                  <div className="text-sm text-muted-foreground">Tipos de Reportes</div>
+                  <div className="text-lg sm:text-2xl font-bold text-primary">4</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Tipos de Reportes</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-accent">Excel + PDF</div>
-                  <div className="text-sm text-muted-foreground">Formatos Disponibles</div>
+                  <div className="text-lg sm:text-2xl font-bold text-accent">Excel + PDF</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Formatos Disponibles</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-chart-2">Tiempo Real</div>
-                  <div className="text-sm text-muted-foreground">Datos Actualizados</div>
+                  <div className="text-lg sm:text-2xl font-bold text-chart-2">Tiempo Real</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Datos Actualizados</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-chart-3">Seguro</div>
-                  <div className="text-sm text-muted-foreground">Información Protegida</div>
+                  <div className="text-lg sm:text-2xl font-bold text-chart-3">Seguro</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Información Protegida</div>
                 </div>
               </div>
             </CardContent>
