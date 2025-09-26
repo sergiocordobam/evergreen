@@ -21,3 +21,5 @@ reporte_pdf productor nombre Historico
 campo produccion
 
 reporte_top3 productor producto nombre Top3
+
+reporte_costos productor producto nombre CostosAgrupados

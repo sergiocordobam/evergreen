@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import pandas as pd
 import io
 
@@ -145,5 +146,44 @@ def reporte_top3(producto: str = Query(..., description="Nombre del producto"),
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename=Top3_{producto}.xlsx"}
+    )
+
+
+
+
+@app.get("/reporte/costosagrupados/costos")
+def reporte_costosagrupados(nombre: str = Query(..., description="Nombre del productor"),
+                                db: Session = Depends(get_db)):
+
+    productor = db.query(Productor).filter(Productor.nombre == nombre).first()
+    if not productor:
+        return {"error": f"No se encontró el productor con nombre {nombre}"}
+
+    # Agregar costos agrupados por producto
+    relaciones = db.query(Producto.nombre, func.sum(ProductoProductor.costo).label("total_costo"))                    .join(Producto, Producto.id == ProductoProductor.id_producto)                    .filter(ProductoProductor.id_productor == productor.id)                    .group_by(Producto.nombre)                    .all()
+
+    if not relaciones:
+        return {"error": f"No hay datos de costos para {nombre}"}
+
+    data = []
+    for producto, total_costo in relaciones:
+        data.append({
+            "Nombre Productor": productor.nombre,
+            "Área": productor.area,
+            "Producto": producto,
+            "Total Costo": total_costo
+        })
+
+    # Exportar a Excel
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="CostosAgrupados")
+
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=CostosAgrupados_{nombre}.xlsx"}
     )
 
