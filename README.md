@@ -32,6 +32,9 @@ luego se transforman en código ejecutable o aplicaciones.
    ```
 2. Inicia el servidor frontend:
    ```bash
+   cd .\front\
+    ```
+   ```bash
    npm run dev
    ```
 
