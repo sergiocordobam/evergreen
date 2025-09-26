@@ -107,3 +107,43 @@ def reporte_historico(nombre: str = Query(..., description="Nombre del productor
         headers={"Content-Disposition": f"attachment; filename=Reporte_Historico_{nombre}.pdf"}
     )
 
+
+
+
+@app.get("/reporte/top3/top3")
+def reporte_top3(producto: str = Query(..., description="Nombre del producto"),
+                                db: Session = Depends(get_db)):
+
+    # Buscar el producto
+    prod = db.query(Producto).filter(Producto.nombre == producto).first()
+    if not prod:
+        return {"error": f"No se encontró el producto {producto}"}
+
+    # Traer relaciones de este producto
+    relaciones = db.query(ProductoProductor, Productor)                    .join(Productor, ProductoProductor.id_productor == Productor.id)                    .filter(ProductoProductor.id_producto == prod.id)                    .order_by(ProductoProductor.cantidad.desc())                    .limit(3)                    .all()
+
+    if not relaciones:
+        return {"error": f"No hay productores registrados para el producto {producto}"}
+
+    data = []
+    for rel_pp, prodor in relaciones:
+        data.append({
+            "Nombre Productor": prodor.nombre,
+            "Área": prodor.area,
+            "Producto": producto,
+            "Cantidad": rel_pp.cantidad,
+            "Costo": rel_pp.costo
+        })
+
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Top3")
+
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=Top3_{producto}.xlsx"}
+    )
+

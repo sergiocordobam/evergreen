@@ -19,3 +19,5 @@ incluir area
 
 reporte_pdf productor nombre Historico
 campo produccion
+
+reporte_top3 productor producto nombre Top3

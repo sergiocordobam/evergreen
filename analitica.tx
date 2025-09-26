@@ -16,7 +16,7 @@ Tipo:
 ;
 
 Operacion:
-    ReporteProductores | ReporteProductorPDF
+    ReporteProductores | ReporteProductorPDF | ReporteTop3
 ;
 
 ReporteProductores:
@@ -27,4 +27,8 @@ ReporteProductores:
 ReporteProductorPDF:
     'reporte_pdf' 'productor' 'nombre' name=ID
     'campo' campo=ID
+;
+
+ReporteTop3:
+    'reporte_top3' 'productor' 'producto' 'nombre' name=ID
 ;
