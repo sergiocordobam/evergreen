@@ -365,8 +365,6 @@ export default function ReportesPage() {
                       <SelectItem value="Finca 1">Finca 1</SelectItem>
                       <SelectItem value="Finca 2">Finca 2</SelectItem>
                       <SelectItem value="Finca 3">Finca 3</SelectItem>
-                      <SelectItem value="Finca 4">Finca 4</SelectItem>
-                      <SelectItem value="Finca 5">Finca 5</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs sm:text-sm text-muted-foreground">Requerido para reportes de histórico y costos</p>
@@ -379,10 +377,8 @@ export default function ReportesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Café">Café</SelectItem>
-                      <SelectItem value="Cacao">Cacao</SelectItem>
-                      <SelectItem value="Maíz">Maíz</SelectItem>
-                      <SelectItem value="Frijol">Frijol</SelectItem>
-                      <SelectItem value="Plátano">Plátano</SelectItem>
+                      <SelectItem value="Papa">Papa</SelectItem>
+                      <SelectItem value="Platano">Platano</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs sm:text-sm text-muted-foreground">Requerido para reporte Top 3</p>
